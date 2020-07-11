@@ -1,5 +1,7 @@
 import numpy as np
 
+four_lepton_skim_required_columns = ["n_10_leptons", "n_25_leptons", "n_veto_leptons_noiso", "n_veto_leptons"]
+
 
 def four_lepton_skim(data):
 

@@ -107,6 +107,20 @@ common_producers = {
     "n_veto_leptons": lambda d: d["Electron_veto_mask"].sum() + d["Muon_veto_mask"].sum(),
     "n_10_leptons": make_lepton_counter(pt_threshold=10.0),
     "n_25_leptons": make_lepton_counter(pt_threshold=25.0),
+    # Electrons after veto selection without isolation cut
+    "VetoNoIsoElectron_pt": lambda d: d["UncorrElectron_pt"][d["Electron_veto_mask_noiso"]],
+    "VetoNoIsoElectron_eta": lambda d: d["Electron_eta"][d["Electron_veto_mask_noiso"]],
+    "VetoNoIsoElectron_phi": lambda d: d["Electron_phi"][d["Electron_veto_mask_noiso"]],
+    "VetoNoIsoElectron_mass": lambda d: d["Electron_mass"][d["Electron_veto_mask_noiso"]],
+    "VetoNoIsoElectron_pfRelIso03_all": lambda d: d["Electron_pfRelIso03_all"][d["Electron_veto_mask_noiso"]],
+    "VetoNoIsoElectron_relIso03EAv4wLep": lambda d: d["Electron_relIso03EAv4wLep"][d["Electron_veto_mask_noiso"]],
+    # Muons after veto selection without isolation cut
+    "VetoNoIsoMuon_pt": lambda d: d["Muon_pt"][d["Muon_veto_mask_noiso"]],
+    "VetoNoIsoMuon_eta": lambda d: d["Muon_eta"][d["Muon_veto_mask_noiso"]],
+    "VetoNoIsoMuon_phi": lambda d: d["Muon_phi"][d["Muon_veto_mask_noiso"]],
+    "VetoNoIsoMuon_mass": lambda d: d["Muon_mass"][d["Muon_veto_mask_noiso"]],
+    "VetoNoIsoMuon_pfRelIso03_all": lambda d: d["Muon_pfRelIso03_all"][d["Muon_veto_mask_noiso"]],
+    "VetoNoIsoMuon_relIso03EAv4wLep": lambda d: d["Muon_relIso03EAv4wLep"][d["Muon_veto_mask_noiso"]],
 }
 
 data_producers = {
