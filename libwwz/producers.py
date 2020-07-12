@@ -1,4 +1,5 @@
 from libwwz import lepton_identification
+from libwwz import jet_selections
 
 import numpy as np
 
@@ -95,6 +96,7 @@ common_producers = {
     "Elecron_p4": make_lorentz_vector_producer("Electron"),
     "UncorrElectron_p4": make_lorentz_vector_producer("UncorrElectron"),
     "Muon_p4": make_lorentz_vector_producer("Muon"),
+    "Jet_p4": make_lorentz_vector_producer("Jet"),
     # Custom Isolation
     "Electron_relIso03EAv4wLep": electron_isolation_with_pf_leptons,
     "Muon_relIso03EAv4wLep": muon_isolation_with_pf_leptons,
@@ -108,7 +110,7 @@ common_producers = {
     "n_10_leptons": make_lepton_counter(pt_threshold=10.0),
     "n_25_leptons": make_lepton_counter(pt_threshold=25.0),
     # Electrons after veto selection without isolation cut
-    "VetoNoIsoElectron_pt": lambda d: d["UncorrElectron_pt"][d["Electron_veto_mask_noiso"]],
+    "VetoNoIsoElectron_pt": lambda d: d["Electron_pt"][d["Electron_veto_mask_noiso"]],
     "VetoNoIsoElectron_eta": lambda d: d["Electron_eta"][d["Electron_veto_mask_noiso"]],
     "VetoNoIsoElectron_phi": lambda d: d["Electron_phi"][d["Electron_veto_mask_noiso"]],
     "VetoNoIsoElectron_mass": lambda d: d["Electron_mass"][d["Electron_veto_mask_noiso"]],
@@ -121,6 +123,29 @@ common_producers = {
     "VetoNoIsoMuon_mass": lambda d: d["Muon_mass"][d["Muon_veto_mask_noiso"]],
     "VetoNoIsoMuon_pfRelIso03_all": lambda d: d["Muon_pfRelIso03_all"][d["Muon_veto_mask_noiso"]],
     "VetoNoIsoMuon_relIso03EAv4wLep": lambda d: d["Muon_relIso03EAv4wLep"][d["Muon_veto_mask_noiso"]],
+    # Electrons after veto selection without isolation cut
+    "VetoElectron_pt": lambda d: d["UncorrElectron_pt"][d["Electron_veto_mask"]],
+    "VetoElectron_eta": lambda d: d["Electron_eta"][d["Electron_veto_mask"]],
+    "VetoElectron_phi": lambda d: d["Electron_phi"][d["Electron_veto_mask"]],
+    "VetoElectron_mass": lambda d: d["Electron_mass"][d["Electron_veto_mask"]],
+    "VetoElectron_pfRelIso03_all": lambda d: d["Electron_pfRelIso03_all"][d["Electron_veto_mask"]],
+    "VetoElectron_relIso03EAv4wLep": lambda d: d["Electron_relIso03EAv4wLep"][d["Electron_veto_mask"]],
+    "VetoElectron_p4": make_lorentz_vector_producer("VetoElectron"),
+    # Muons after veto selection without isolation cut
+    "VetoMuon_pt": lambda d: d["Muon_pt"][d["Muon_veto_mask"]],
+    "VetoMuon_eta": lambda d: d["Muon_eta"][d["Muon_veto_mask"]],
+    "VetoMuon_phi": lambda d: d["Muon_phi"][d["Muon_veto_mask"]],
+    "VetoMuon_mass": lambda d: d["Muon_mass"][d["Muon_veto_mask"]],
+    "VetoMuon_pfRelIso03_all": lambda d: d["Muon_pfRelIso03_all"][d["Muon_veto_mask"]],
+    "VetoMuon_relIso03EAv4wLep": lambda d: d["Muon_relIso03EAv4wLep"][d["Muon_veto_mask"]],
+    "VetoMuon_p4": make_lorentz_vector_producer("VetoMuon"),
+    # jet related
+    "Jet_passes_tight_id": jet_selections.passes_tight_jet_id,
+    "Jet_matches_veto_lepton": jet_selections.jet_matches_veto_lepton,
+    "Jet_passes_vvv_id": jet_selections.passes_vvv_jet_id,
+    "Jet_passes_vvv_b_jet_id": jet_selections.passes_vvv_b_jet_selection,
+    "nb": lambda d: d["Jet_passes_vvv_b_jet_id"].sum()
+    # unlike for the b-jets, I have not quite found the right regular jet selection yet
 }
 
 data_producers = {

@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     os.makedirs(args.output, exist_ok=True)
 
-    # /scratch/store/mc/RunIIFall17NanoAODv6/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano25Oct2019_102X_mc2017_realistic_v7-v1
+    # python wvz_skimming.py /scratch/store/mc/RunIIFall17NanoAODv6/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano25Oct2019_102X_mc2017_realistic_v7-v1 ../skims/2017_WWZ_for_jetmet_sync --overwrite --verbosity 2
 
     nano_files = list_root_files_recursively(args.input)
 
@@ -44,6 +44,7 @@ if __name__ == "__main__":
         "passesMETfiltersRun2",
         "run",
         "xsec_br",
+        "nb",
     ]
 
     columns = list(set(libwwz.skims.four_lepton_skim_required_columns + columns_to_save))
