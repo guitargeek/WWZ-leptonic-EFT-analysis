@@ -3,3 +3,4 @@ from . import producers
 from . import output
 from . import skims
 from . import jet_selections
+from . import samples

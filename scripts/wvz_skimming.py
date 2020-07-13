@@ -1,6 +1,5 @@
 if __name__ == "__main__":
 
-    import argparse
     import sys
 
     from geeksw.utils.data_loader_tools import make_data_loader, TreeWrapper, list_root_files_recursively
@@ -12,7 +11,7 @@ if __name__ == "__main__":
 
     import os
 
-    skim = libwwz.skims.four_lepton_skim
+    import argparse
 
     parser = argparse.ArgumentParser(description="Configurable skimming of NanoAOD.")
     parser.add_argument("input", type=str, help="the path to the NanoAOD dataset")
@@ -24,6 +23,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     os.makedirs(args.output, exist_ok=True)
+
+    skim = libwwz.skims.four_lepton_skim
 
     # python wvz_skimming.py /scratch/store/mc/RunIIFall17NanoAODv6/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano25Oct2019_102X_mc2017_realistic_v7-v1 ../skims/2017_WWZ_for_jetmet_sync --overwrite --verbosity 2
 
