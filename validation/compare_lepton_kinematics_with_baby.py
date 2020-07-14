@@ -32,13 +32,13 @@ columns = [
     "VetoNoIsoElectron_phi",
     "VetoNoIsoElectron_mass",
     "VetoNoIsoElectron_pfRelIso03_all",
-    "VetoNoIsoElectron_relIso03EAv4wLep",
+    "VetoNoIsoElectron_pfRelIso03_all_wLep",
     "VetoNoIsoMuon_pt",
     "VetoNoIsoMuon_eta",
     "VetoNoIsoMuon_phi",
     "VetoNoIsoMuon_mass",
     "VetoNoIsoMuon_pfRelIso03_all",
-    "VetoNoIsoMuon_relIso03EAv4wLep",
+    "VetoNoIsoMuon_pfRelIso03_all_wLep",
     *libwwz.output.columns,
 ]
 
@@ -46,7 +46,7 @@ data_loader = make_data_loader(columns, libwwz.producers.mc_producers, verbosity
 
 datas = []
 
-skim = libwwz.skims.four_lepton_skim
+skim = libwwz.skims.wvz_skim
 
 for i_nano_file, nano_file in enumerate(nano_files):
     print(nano_file)
@@ -131,7 +131,7 @@ for particle in ["VetoNoIsoElectron", "VetoNoIsoMuon"]:
     for var in ["lep_relIso03EAv4", "lep_relIso03EAv4wLep"]:
         plt.hist(baby.array(var)[electron_mask].flatten(), bins, histtype="step", label="BABY - " + var)  # * baby_pt,
 
-    for var in [particle + "_pfRelIso03_all", particle + "_relIso03EAv4wLep"]:
+    for var in [particle + "_pfRelIso03_all", particle + "_pfRelIso03_all_wLep"]:
         plt.hist(data[var].flatten(), bins, histtype="step", label="NANO - lep_" + var[10:])
 
     plt.legend(loc="upper right")

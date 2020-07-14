@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     os.makedirs(args.output, exist_ok=True)
 
-    skim = libwwz.skims.four_lepton_skim
+    skim = libwwz.skims.wvz_skim
 
     # python wvz_skimming.py /scratch/store/mc/RunIIFall17NanoAODv6/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano25Oct2019_102X_mc2017_realistic_v7-v1 ../skims/2017_WWZ_for_jetmet_sync --overwrite --verbosity 2
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         "nb",
     ]
 
-    columns = list(set(libwwz.skims.four_lepton_skim_required_columns + columns_to_save))
+    columns = list(set(skim.deps + columns_to_save))
 
     data_loader = make_data_loader(columns, libwwz.producers.mc_producers, verbosity=args.verbosity)
 

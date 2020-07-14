@@ -12,8 +12,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # server = "polgrid4.in2p3.fr"
-    server = "cms-xrd-global.cern.ch"
+    server = "polgrid4.in2p3.fr"
+    # server = "cms-gridftp.rcac.purdue.edu"
+    # server = "cms-xrd-global.cern.ch"
     # server = "cmsxrootd.fnal.gov"
     # server = "gridsrm.ts.infn.it"
     # server = "hephyse.oeaw.ac.at"
@@ -33,7 +34,6 @@ if __name__ == "__main__":
 
         file_list = [f.strip() for f in file_list.split("\n") if ".root" in f]
         print(ds + f" has {len(file_list)} files")
-
 
         for fname in file_list:
             scratch_fname = "/scratch" + fname

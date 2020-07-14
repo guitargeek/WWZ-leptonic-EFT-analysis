@@ -98,12 +98,14 @@ common_producers = {
     "Muon_p4": make_lorentz_vector_producer("Muon"),
     "Jet_p4": make_lorentz_vector_producer("Jet"),
     # Custom Isolation
-    "Electron_relIso03EAv4wLep": electron_isolation_with_pf_leptons,
-    "Muon_relIso03EAv4wLep": muon_isolation_with_pf_leptons,
+    "Electron_pfRelIso03_all_wLep": electron_isolation_with_pf_leptons,
+    "Muon_pfRelIso03_all_wLep": muon_isolation_with_pf_leptons,
     "Electron_veto_mask_noiso": lepton_identification.passes_very_loose_electron_id,
-    "Electron_veto_mask": lambda d: np.logical_and(d["Electron_veto_mask_noiso"], d["Electron_relIso03EAv4wLep"] < 0.4),
+    "Electron_veto_mask": lambda d: np.logical_and(
+        d["Electron_veto_mask_noiso"], d["Electron_pfRelIso03_all_wLep"] < 0.4
+    ),
     "Muon_veto_mask_noiso": passes_muon_veto_id_noiso,
-    "Muon_veto_mask": lambda d: np.logical_and(d["Muon_veto_mask_noiso"], d["Muon_relIso03EAv4wLep"] < 0.4),
+    "Muon_veto_mask": lambda d: np.logical_and(d["Muon_veto_mask_noiso"], d["Muon_pfRelIso03_all_wLep"] < 0.4),
     # counting stuff
     "n_veto_leptons_noiso": lambda d: d["Electron_veto_mask_noiso"].sum() + d["Muon_veto_mask_noiso"].sum(),
     "n_veto_leptons": lambda d: d["Electron_veto_mask"].sum() + d["Muon_veto_mask"].sum(),
@@ -115,36 +117,60 @@ common_producers = {
     "VetoNoIsoElectron_phi": lambda d: d["Electron_phi"][d["Electron_veto_mask_noiso"]],
     "VetoNoIsoElectron_mass": lambda d: d["Electron_mass"][d["Electron_veto_mask_noiso"]],
     "VetoNoIsoElectron_pfRelIso03_all": lambda d: d["Electron_pfRelIso03_all"][d["Electron_veto_mask_noiso"]],
-    "VetoNoIsoElectron_relIso03EAv4wLep": lambda d: d["Electron_relIso03EAv4wLep"][d["Electron_veto_mask_noiso"]],
+    "VetoNoIsoElectron_pfRelIso03_all_wLep": lambda d: d["Electron_pfRelIso03_all_wLep"][d["Electron_veto_mask_noiso"]],
     # Muons after veto selection without isolation cut
     "VetoNoIsoMuon_pt": lambda d: d["Muon_pt"][d["Muon_veto_mask_noiso"]],
     "VetoNoIsoMuon_eta": lambda d: d["Muon_eta"][d["Muon_veto_mask_noiso"]],
     "VetoNoIsoMuon_phi": lambda d: d["Muon_phi"][d["Muon_veto_mask_noiso"]],
     "VetoNoIsoMuon_mass": lambda d: d["Muon_mass"][d["Muon_veto_mask_noiso"]],
     "VetoNoIsoMuon_pfRelIso03_all": lambda d: d["Muon_pfRelIso03_all"][d["Muon_veto_mask_noiso"]],
-    "VetoNoIsoMuon_relIso03EAv4wLep": lambda d: d["Muon_relIso03EAv4wLep"][d["Muon_veto_mask_noiso"]],
+    "VetoNoIsoMuon_pfRelIso03_all_wLep": lambda d: d["Muon_pfRelIso03_all_wLep"][d["Muon_veto_mask_noiso"]],
     # Electrons after veto selection without isolation cut
     "VetoElectron_pt": lambda d: d["UncorrElectron_pt"][d["Electron_veto_mask"]],
     "VetoElectron_eta": lambda d: d["Electron_eta"][d["Electron_veto_mask"]],
     "VetoElectron_phi": lambda d: d["Electron_phi"][d["Electron_veto_mask"]],
     "VetoElectron_mass": lambda d: d["Electron_mass"][d["Electron_veto_mask"]],
+    "VetoElectron_ip3d": lambda d: d["Electron_ip3d"][d["Electron_veto_mask"]],
+    "VetoElectron_sip3d": lambda d: d["Electron_sip3d"][d["Electron_veto_mask"]],
+    "VetoElectron_charge": lambda d: d["Electron_charge"][d["Electron_veto_mask"]],
+    "VetoElectron_mediumId": lambda d: d["Electron_mvaFall17V2Iso_WP90"][
+        d["Electron_veto_mask"]
+    ],  ### watch out for the name change
     "VetoElectron_pfRelIso03_all": lambda d: d["Electron_pfRelIso03_all"][d["Electron_veto_mask"]],
-    "VetoElectron_relIso03EAv4wLep": lambda d: d["Electron_relIso03EAv4wLep"][d["Electron_veto_mask"]],
+    "VetoElectron_pfRelIso03_all_wLep": lambda d: d["Electron_pfRelIso03_all_wLep"][d["Electron_veto_mask"]],
     "VetoElectron_p4": make_lorentz_vector_producer("VetoElectron"),
     # Muons after veto selection without isolation cut
     "VetoMuon_pt": lambda d: d["Muon_pt"][d["Muon_veto_mask"]],
     "VetoMuon_eta": lambda d: d["Muon_eta"][d["Muon_veto_mask"]],
     "VetoMuon_phi": lambda d: d["Muon_phi"][d["Muon_veto_mask"]],
     "VetoMuon_mass": lambda d: d["Muon_mass"][d["Muon_veto_mask"]],
+    "VetoMuon_ip3d": lambda d: d["Muon_ip3d"][d["Muon_veto_mask"]],
+    "VetoMuon_sip3d": lambda d: d["Muon_sip3d"][d["Muon_veto_mask"]],
+    "VetoMuon_charge": lambda d: d["Muon_charge"][d["Muon_veto_mask"]],
+    "VetoMuon_mediumId": lambda d: d["Muon_mediumId"][d["Muon_veto_mask"]],
     "VetoMuon_pfRelIso03_all": lambda d: d["Muon_pfRelIso03_all"][d["Muon_veto_mask"]],
-    "VetoMuon_relIso03EAv4wLep": lambda d: d["Muon_relIso03EAv4wLep"][d["Muon_veto_mask"]],
+    "VetoMuon_pfRelIso03_all_wLep": lambda d: d["Muon_pfRelIso03_all_wLep"][d["Muon_veto_mask"]],
     "VetoMuon_p4": make_lorentz_vector_producer("VetoMuon"),
+    # Combine veto leptons
+    "VetoLepton_pt": lambda d: d["VetoElectron_pt"].concatenate([d["VetoMuon_pt"]], axis=1),
+    "VetoLepton_eta": lambda d: d["VetoElectron_eta"].concatenate([d["VetoMuon_eta"]], axis=1),
+    "VetoLepton_phi": lambda d: d["VetoElectron_phi"].concatenate([d["VetoMuon_phi"]], axis=1),
+    "VetoLepton_mass": lambda d: d["VetoElectron_mass"].concatenate([d["VetoMuon_mass"]], axis=1),
+    "VetoLepton_ip3d": lambda d: d["VetoElectron_ip3d"].concatenate([d["VetoMuon_ip3d"]], axis=1),
+    "VetoLepton_sip3d": lambda d: d["VetoElectron_sip3d"].concatenate([d["VetoMuon_sip3d"]], axis=1),
+    "VetoLepton_charge": lambda d: d["VetoElectron_charge"].concatenate([d["VetoMuon_charge"]], axis=1),
+    "VetoLepton_mediumId": lambda d: d["VetoElectron_mediumId"].concatenate([d["VetoMuon_mediumId"]], axis=1),
+    "VetoLepton_p4": lambda d: d["VetoElectron_p4"].concatenate([d["VetoMuon_p4"]], axis=1),
+    "VetoLepton_pdgId": lambda d: (-11 * d["VetoElectron_charge"]).concatenate([-13 * d["VetoMuon_charge"]], axis=1),
+    "VetoLepton_pfRelIso03_all_wLep": lambda d: d["VetoElectron_pfRelIso03_all_wLep"].concatenate(
+        [d["VetoMuon_pfRelIso03_all_wLep"]], axis=1
+    ),
     # jet related
     "Jet_passes_tight_id": jet_selections.passes_tight_jet_id,
     "Jet_matches_veto_lepton": jet_selections.jet_matches_veto_lepton,
     "Jet_passes_vvv_id": jet_selections.passes_vvv_jet_id,
     "Jet_passes_vvv_b_jet_id": jet_selections.passes_vvv_b_jet_selection,
-    "nb": lambda d: d["Jet_passes_vvv_b_jet_id"].sum()
+    "nb": lambda d: d["Jet_passes_vvv_b_jet_id"].sum(),
     # unlike for the b-jets, I have not quite found the right regular jet selection yet
 }
 
