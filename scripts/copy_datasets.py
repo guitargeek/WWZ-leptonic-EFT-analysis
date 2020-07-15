@@ -12,9 +12,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    server = "polgrid4.in2p3.fr"
+    # server = "polgrid4.in2p3.fr"
     # server = "cms-gridftp.rcac.purdue.edu"
-    # server = "cms-xrd-global.cern.ch"
+    server = "cms-xrd-global.cern.ch"
     # server = "cmsxrootd.fnal.gov"
     # server = "gridsrm.ts.infn.it"
     # server = "hephyse.oeaw.ac.at"
@@ -41,7 +41,7 @@ if __name__ == "__main__":
             if os.path.isfile(scratch_fname):
                 print("Skipping already synchronized file: " + fname)
                 continue
+            print("Copying missing file: " + fname)
             copy_command = "xrdcp root://" + server + "/" + fname + " " + scratch_fname
             print(copy_command)
-            print("Copying missing file: " + fname)
             os.system(copy_command)
