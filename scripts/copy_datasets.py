@@ -5,6 +5,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Copy datasets to scratch.")
     parser.add_argument("datasets", type=str, help="textfile with all NanoAOD datasets to copy")
+    parser.add_argument("--check_datasets", action="store_true")
     # parser.add_argument("output", type=str, help="the path where the skims will be stored")
     # parser.add_argument("--data", action="store_true")
     # parser.add_argument("--overwrite", action="store_true")
@@ -34,6 +35,9 @@ if __name__ == "__main__":
 
         file_list = [f.strip() for f in file_list.split("\n") if ".root" in f]
         print(ds + f" has {len(file_list)} files")
+
+        if args.check_datasets:
+            continue
 
         for fname in file_list:
             scratch_fname = "/scratch" + fname
