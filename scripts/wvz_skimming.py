@@ -19,10 +19,13 @@ if __name__ == "__main__":
     parser.add_argument("--data", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--verbosity", type=int, default=0)
+    parser.add_argument("--year", type=int, default=None)
 
     args = parser.parse_args()
 
-    os.makedirs(args.output, exist_ok=True)
+    libwwz.config.year = args.year
+
+    os.makedirs(os.path.join(args.output, "parquet"), exist_ok=True)
 
     skim = libwwz.skims.wvz_skim
 
@@ -56,7 +59,7 @@ if __name__ == "__main__":
         for i_nano_file, nano_file in enumerate(nano_files):
             filename = os.path.basename(nano_file).split(".")[0]
 
-            outfile = os.path.join(args.output, filename + ".parquet")
+            outfile = os.path.join(args.output, "parquet", str(i_nano_file) + "_" + filename + ".parquet")
 
             if os.path.isfile(outfile):
                 print("I'm not doing the skim because " + outfile + " would be overwritten!")
@@ -71,6 +74,6 @@ if __name__ == "__main__":
 
         df = pd.DataFrame(data={c: data[c] for c in columns_to_save})
 
-        outfile = os.path.join(args.output, filename + ".parquet")
+        outfile = os.path.join(args.output, "parquet", str(i_nano_file) + "_" + filename + ".parquet")
 
-        df.to_parquet(outfile, compression=None, index=False)
+        df.to_parquet(outfile, compression="gzip", index=False)

@@ -166,7 +166,7 @@ common_producers = {
         [d["VetoMuon_pfRelIso03_all_wLep"]], axis=1
     ),
     # jet related
-    "Jet_passes_tight_id": jet_selections.passes_tight_jet_id,
+    "Jet_passes_id": jet_selections.passes_jet_id,
     "Jet_matches_veto_lepton": jet_selections.jet_matches_veto_lepton,
     "Jet_passes_vvv_id": jet_selections.passes_vvv_jet_id,
     "Jet_passes_vvv_b_jet_id": jet_selections.passes_vvv_b_jet_selection,

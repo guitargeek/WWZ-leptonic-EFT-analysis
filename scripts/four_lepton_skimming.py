@@ -79,14 +79,17 @@ if __name__ == "__main__":
     parser.add_argument("--data", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--verbosity", type=int, default=0)
+    parser.add_argument("--year", type=int, default=None)
 
     args = parser.parse_args()
+
+    libwwz.config.year = args.year
 
     os.makedirs(os.path.join(args.output, "parquet"), exist_ok=True)
 
     skim = libwwz.skims.four_lepton_skim
 
-    # python wvz_skimming.py /scratch/store/mc/RunIIFall17NanoAODv6/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano25Oct2019_102X_mc2017_realistic_v7-v1 ../skims/2017_WWZ_four_lepton_skim --overwrite --verbosity 2
+    # python wvz_skimming.py /scratch/store/mc/RunIIFall17NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1 ../skims/2017_WWZ_four_lepton_skim --overwrite --verbosity 2 --year 2017
 
     nano_files = list_root_files_recursively(args.input)
 
@@ -122,7 +125,7 @@ if __name__ == "__main__":
         for i_nano_file, nano_file in enumerate(nano_files):
             filename = os.path.basename(nano_file).split(".")[0]
 
-            outfile = os.path.join(args.output, "parquet", filename + ".parquet")
+            outfile = os.path.join(args.output, "parquet", str(i_nano_file) + "_" + filename + ".parquet")
 
             if os.path.isfile(outfile):
                 print("I'm not doing the skim because " + outfile + " would be overwritten!")
@@ -142,15 +145,18 @@ if __name__ == "__main__":
 
         data = skim(data_full)
 
+        if len(data["genWeight"]) == 0:
+            continue
+
         df_leptons = four_veto_lepton_df(data)
 
         df_other = pd.DataFrame(data={c: data[c] for c in columns_to_save})
 
         df = pd.concat([df_other, df_leptons], axis=1)
 
-        outfile = os.path.join(args.output, "parquet", filename + ".parquet")
+        outfile = os.path.join(args.output, "parquet", str(i_nano_file) + "_" + filename + ".parquet")
 
-        df.to_parquet(outfile, compression=None, index=False)
+        df.to_parquet(outfile, compression="gzip", index=False)
 
     with open(os.path.join(args.output, "metainfo.json"), "w") as outfile:
         outfile.write(json.dumps(metainfo, indent=4, sort_keys=True))

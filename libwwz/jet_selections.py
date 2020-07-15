@@ -1,13 +1,16 @@
 import numpy as np
 
+from libwwz.config import cfg
 
-def passes_tight_jet_id(data):
+
+def passes_jet_id(data):
     cuts = [
-        data["Jet_nConstituents"] > 1,
-        data["Jet_neHEF"] < 0.9,
-        data["Jet_neEmEF"] < 0.9,
-        data["Jet_chHEF"] > 0.0,
-        data["Jet_chHEF"] + data["Jet_chEmEF"] > 0.0,
+        data["Jet_nConstituents"] >= cfg["jet_id_min_nConstituents"],
+        data["Jet_neHEF"] < cfg["jet_id_max_neHEF"],
+        data["Jet_neEmEF"] < cfg["jet_id_max_neEmEF"],
+        data["Jet_chHEF"] > cfg["jet_id_min_chHEF"],
+        data["Jet_chEmEF"] < cfg["jet_id_max_chEmEF"],
+        data["Jet_chHEF"] + data["Jet_chEmEF"] > cfg["jet_id_min_ch_nConstituents"],
         # last cut should correspond to charged multiplicity > 0
     ]
 
@@ -29,9 +32,9 @@ def passes_vvv_jet_id(data):
 
     cuts = [
         ~data["Jet_matches_veto_lepton"],
-        data["Jet_passes_tight_id"],
-        data["Jet_pt"] > 30.0,
-        np.abs(data["Jet_eta"]) < 2.4,
+        data["Jet_passes_id"],
+        data["Jet_pt"] > cfg["jet_min_pt"],
+        np.abs(data["Jet_eta"]) < cfg["jet_max_eta"],
     ]
 
     out = cuts[0]
@@ -45,10 +48,10 @@ def passes_vvv_jet_id(data):
 def passes_vvv_b_jet_selection(data):
 
     cuts = [
-        data["Jet_btagDeepB"] > 0.1522,
-        data["Jet_passes_tight_id"],
-        data["Jet_pt"] > 20,
-        np.abs(data["Jet_eta"]) < 2.4,
+        data["Jet_btagDeepB"] > cfg["jet_btagDeepB_cut"],
+        data["Jet_passes_id"],
+        data["Jet_pt"] > cfg["b_jet_min_pt"],
+        np.abs(data["Jet_eta"]) < cfg["jet_max_eta"],
         ~data["Jet_matches_veto_lepton"],
     ]
 
@@ -66,6 +69,10 @@ def _match_passing_selection(match_idx, match_selection):
     Example:
 
     >>> match_passing_selection(data["Jet_electronIdx1"], data["Electron_veto_mask"]).sum()
+
+    Note:
+
+    * this is buggy due to the buggy mathing in NanoAOD
     """
     idx_offset = np.concatenate([[0], np.cumsum(match_selection.counts)[:-1]])
     idx_offset = np.array(idx_offset, dtype=np.int32)

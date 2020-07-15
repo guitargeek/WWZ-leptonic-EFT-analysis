@@ -8,8 +8,20 @@ import uproot
 import numpy as np
 import matplotlib.pyplot as plt
 
-baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2017_v0.1.21/wwz_4l2v_amcatnlo_1.root"
-nano_dir = "/scratch/store/mc/RunIIFall17NanoAODv6/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano25Oct2019_102X_mc2017_realistic_v7-v1"
+year = 2016
+libwwz.config.year = year
+
+if libwwz.config.year == 2016:
+    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2016_v0.1.21/wwz_amcatnlo_1.root"
+    nano_dir = "/scratch/store/mc/RunIISummer16NanoAODv7/WWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8/NANOAODSIM/PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1"
+
+if libwwz.config.year == 2017:
+    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2017_v0.1.21/wwz_4l2v_amcatnlo_1.root"
+    nano_dir = "/scratch/store/mc/RunIIFall17NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1"
+
+if libwwz.config.year == 2018:
+    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2018_v0.1.21/wwz_4l2v_amcatnlo_1.root"
+    nano_dir = "/scratch/store/mc/RunIIAutumn18NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1"
 
 nano_files = list_root_files_recursively(nano_dir)
 
@@ -39,6 +51,7 @@ columns = [
     "VetoNoIsoMuon_mass",
     "VetoNoIsoMuon_pfRelIso03_all",
     "VetoNoIsoMuon_pfRelIso03_all_wLep",
+    "nb",
     *libwwz.output.columns,
 ]
 
@@ -106,7 +119,7 @@ def kinematics_comparison_plot(
     # plt.gca().set_yscale("log", nonposy='clip')
     plt.xlabel(label)
     plt.ylabel("Events")
-    plt.savefig(particle + "_" + baby_variable + ".png", dpi=300)
+    plt.savefig(str(year) + "_" + particle + "_" + baby_variable + ".png", dpi=300)
     # plt.show()
     plt.close()
 
@@ -139,6 +152,16 @@ for particle in ["VetoNoIsoElectron", "VetoNoIsoMuon"]:
     plt.title(particle)
     plt.xlabel("Relative Isolation")
     plt.ylabel("Events")
-    plt.savefig(particle + "_isolation.png", dpi=300)
+    plt.savefig(str(year) + "_" + particle + "_isolation.png", dpi=300)
     plt.close()
     # plt.show()
+
+# Jet variables
+bins = np.linspace(0, 10, 11)
+plt.hist(baby.array("nb")[baby_idx], bins=bins, histtype="step", label="BABY")
+plt.hist(data["nb"][nano_idx], bins=bins, histtype="step", label="NANO")
+plt.legend(loc="upper right")
+plt.xlabel("Number of b-jets")
+plt.ylabel("Events")
+plt.savefig(str(year) + "_" + "nb.png", dpi=300)
+plt.close()

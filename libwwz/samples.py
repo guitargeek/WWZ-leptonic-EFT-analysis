@@ -1,4 +1,4 @@
-# inspired by https://github.com/sgnoohc/VVVNanoLooper/blob/master/condor/samples.py
+# inspired by https://github.com/sgnoohc/VVVNanoLooper/blob/master/condor/datasets.py
 
 _data_version = "02Apr2020"
 
@@ -63,7 +63,7 @@ data_2018 = {
 
 
 _mc_2016_campaign = "RunIISummer16NanoAODv7-Nano02Apr2020_102X_mcRun2_asymptotic_v8"
-# some samples have PUMoriond17 in the GT, I don't know what the difference is
+# some datasets have PUMoriond17 in the GT, I don't know what the difference is
 _mc_2016_campaign_pumoriond = "RunIISummer16NanoAODv7-PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8"
 
 
@@ -115,7 +115,7 @@ mc_2016 = {
 }
 
 _mc_2017_campaign = "RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8"
-# no idea what this EXT in the global tag means, but come samples have it
+# no idea what this EXT in the global tag means, but come datasets have it
 _mc_2017_campaign_ext = "RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_EXT_102X_mc2017_realistic_v8"
 # I also don't know what this "new_pmx" should mean
 _mc_2017_campaign_new_pmx = "RunIIFall17NanoAODv7-PU2017_12Apr2018_Nano02Apr2020_new_pmx_102X_mc2017_realistic_v8"
@@ -238,21 +238,103 @@ mc_2018 = {
 }
 
 
-def _add_samples(all_samples, samples_to_add, prefix):
-    for key, value in samples_to_add.items():
-        all_samples[prefix + key] = value
+def _add_datasets(all_datasets, datasets_to_add, prefix):
+    for key, value in datasets_to_add.items():
+        all_datasets[prefix + key] = value
 
 
-all_samples = dict()
-# _add_samples(all_samples, mc_2016, "mc_2016_")
-# _add_samples(all_samples, mc_2017, "mc_2017_")
-_add_samples(all_samples, mc_2018, "mc_2018_")
-# _add_samples(all_samples, data_2016, "data_2016_")
-# _add_samples(all_samples, data_2017, "data_2017_")
-# _add_samples(all_samples, data_2018, "data_2018_")
+all_datasets = dict()
+# _add_datasets(all_datasets, mc_2016, "mc_2016_")
+# _add_datasets(all_datasets, mc_2017, "mc_2017_")
+_add_datasets(all_datasets, mc_2018, "mc_2018_")
+# _add_datasets(all_datasets, data_2016, "data_2016_")
+# _add_datasets(all_datasets, data_2017, "data_2017_")
+# _add_datasets(all_datasets, data_2018, "data_2018_")
+
+
+def get_file_list(dataset):
+    file_list = os.popen('dasgoclient -query="file dataset={0}"'.format(dataset)).read()
+    file_list = [f.strip() for f in file_list.split("\n") if ".root" in f]
+    return file_list
+
+
+import os
+from collections import namedtuple
+
+
+def get_scratch_path(dataset):
+    base_path = "/scratch"
+    first_file = get_file_list(dataset)[0]
+
+    # check if the path is like expected
+    int(first_file.split("/")[-2])
+
+    return "/scratch" + os.path.join(base_path, "/".join(first_file.split("/")[:-2]))
+
+
+def get_datasets(year, mc=True):
+    if mc:
+        if year == 2016:
+            return mc_2016
+        if year == 2017:
+            return mc_2017
+        if year == 2018:
+            return mc_2018
+    else:
+        if year == 2016:
+            return data_2016
+        if year == 2017:
+            return data_2017
+        if year == 2018:
+            return data_2018
+
+
+DatasetInfo = namedtuple("DatasetInfo", ["short_name", "das_name", "year", "mc", "scratch_path", "skim_path"])
+
+
+def get_skim_path(short_name, year, mc):
+    return os.path.join("/scratch/skims", "mc" if mc else "data", str(year), short_name)
+
+
+def get_dataset_infos(year, mc=True):
+
+    infos = []
+
+    datasets = get_datasets(year, mc)
+
+    for short_name, das_name in datasets.items():
+        infos.append(
+            DatasetInfo(
+                short_name=short_name,
+                das_name=das_name,
+                year=year,
+                mc=mc,
+                scratch_path=get_scratch_path(das_name),
+                skim_path=get_skim_path(short_name, year, mc),
+            )
+        )
+
+    return infos
+
 
 if __name__ == "__main__":
 
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Print out the list of datasets for a given year.")
+    parser.add_argument("year", type=int)
+    parser.add_argument("--mc", action="store_true")
+    parser.add_argument("--path", action="store_true")
+
+    args = parser.parse_args()
+
     # just print all the datasets
-    for name, dataset in all_samples.items():
-        print(dataset)
+    def print_datasets(datasets):
+        for name, dataset in datasets.items():
+            if args.path:
+                print(get_scratch_path(dataset))
+            else:
+                print(dataset)
+
+    datasets = get_datasets(year, mc)
+    print_datasets(datasets)
