@@ -22,7 +22,11 @@ def passes_Z_id(df):
     return df_out
 
 
-def passes_W_id(df):
+def passes_W_id(df, use_z_id=False):
+    if use_z_id:
+        df_out = passes_Z_id(df)
+        df_out.columns = ["VetoLepton_passesWid_0", "VetoLepton_passesWid_1", "VetoLepton_passesWid_2", "VetoLepton_passesWid_3"]
+        return df_out
     df_out = pd.DataFrame()
     for i in range(4):
         base_selection = df[f"VetoLepton_ip3d_{i}"].abs() / df[f"VetoLepton_sip3d_{i}"] < 4
@@ -241,9 +245,9 @@ def is_onz_category(df):
     return selection
 
 
-def four_lepton_analysis(df):
+def four_lepton_analysis(df, use_z_id_as_w_id=False):
     df = df[:].copy()
-    df = pd.concat([df, passes_Z_id(df), passes_W_id(df)], axis=1)
+    df = pd.concat([df, passes_Z_id(df), passes_W_id(df, use_z_id=use_z_id_as_w_id)], axis=1)
     df_cands_idx = find_boson_candidate_indices(df)
     df = pd.concat([df, df_cands_idx], axis=1)
     df_z_cand_masses = get_z_cand_masses(df)

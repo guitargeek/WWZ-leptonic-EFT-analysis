@@ -18,7 +18,7 @@ class Skim(object):
         self._mask_function = mask_function
         self.deps = dependencies
 
-    def __call__(self, data):
+    def __call__(self, data, return_mask=False):
 
         skim_mask = self._mask_function(data)
 
@@ -26,6 +26,9 @@ class Skim(object):
         for column, array in data.items():
 
             data_skimmed[column] = array[skim_mask]
+
+        if return_mask:
+            return data_skimmed, skim_mask
 
         return data_skimmed
 
