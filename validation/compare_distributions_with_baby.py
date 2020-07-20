@@ -8,20 +8,26 @@ import uproot
 import numpy as np
 import matplotlib.pyplot as plt
 
-year = 2016
+year = 2018
 libwwz.config.year = year
 
 if libwwz.config.year == 2016:
-    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2016_v0.1.21/wwz_amcatnlo_1.root"
-    nano_dir = "/scratch/store/mc/RunIISummer16NanoAODv7/WWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8/NANOAODSIM/PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1"
+    # baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2016_v0.1.21/wwz_amcatnlo_1.root"
+    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2016_v0.1.21/ttz_llvv_mll10_amcatnlo_1.root"
+    # nano_dir = "/scratch/store/mc/RunIISummer16NanoAODv7/WWZ_TuneCUETP8M1_13TeV-amcatnlo-pythia8/NANOAODSIM/PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8-v1"
+    nano_dir = "/scratch/store/mc/RunIISummer16NanoAODv7/TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8/NANOAODSIM/PUMoriond17_Nano02Apr2020_102X_mcRun2_asymptotic_v8_ext2-v1"
 
 if libwwz.config.year == 2017:
-    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2017_v0.1.21/wwz_4l2v_amcatnlo_1.root"
-    nano_dir = "/scratch/store/mc/RunIIFall17NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1"
+    # baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2017_v0.1.21/wwz_4l2v_amcatnlo_1.root"
+    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2017_v0.1.21/ttz_llvv_mll10_amcatnlo_1.root"
+    # nano_dir = "/scratch/store/mc/RunIIFall17NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1"
+    nano_dir = "/scratch/store/mc/RunIIFall17NanoAODv7/TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8/NANOAODSIM/PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1"
 
 if libwwz.config.year == 2018:
-    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2018_v0.1.21/wwz_4l2v_amcatnlo_1.root"
-    nano_dir = "/scratch/store/mc/RunIIAutumn18NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1"
+    # baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2018_v0.1.21/wwz_4l2v_amcatnlo_1.root"
+    baby_file = "/home/llr/cms/rembser/scratch/baby-ntuples/WVZMVA2018_v0.1.21/ttz_llvv_mll10_amcatnlo_1.root"
+    # nano_dir = "/scratch/store/mc/RunIIAutumn18NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21-v1"
+    nano_dir = "/scratch/store/mc/RunIIAutumn18NanoAODv7/TTZToLLNuNu_M-10_TuneCP5_13TeV-amcatnlo-pythia8/NANOAODSIM/Nano02Apr2020_102X_upgrade2018_realistic_v21_ext1-v1"
 
 nano_files = list_root_files_recursively(nano_dir)
 

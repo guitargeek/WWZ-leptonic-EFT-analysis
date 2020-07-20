@@ -252,10 +252,11 @@ def four_lepton_analysis(df, use_z_id_as_w_id=False):
     df = pd.concat([df, df_cands_idx], axis=1)
     df_z_cand_masses = get_z_cand_masses(df)
     df = pd.concat([df, df_z_cand_masses], axis=1)
-    df.loc[is_btag_emu_category(df), "category"] = "BTagEMu"
     df["category"] = "uncategorized"
+    df.loc[is_btag_emu_category(df), "category"] = "BTagEMu"
     df.loc[is_emu_category(df), "category"] = "EMu"
     df.loc[is_offz_category(df), "category"] = "OffZ"
     df.loc[is_onz_category(df), "category"] = "OnZ"
     df["veto_lepton_pt_sum"] = jagged_lepton_variable(df, "pt").sum()
+    df["veto_lepton_pt_min"] = jagged_lepton_variable(df, "pt").min()
     return df
