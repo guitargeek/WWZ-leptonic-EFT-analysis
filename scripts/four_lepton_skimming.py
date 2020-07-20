@@ -78,6 +78,7 @@ if __name__ == "__main__":
     parser.add_argument("output", type=str, help="the path where the skims will be stored")
     parser.add_argument("--data", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--eft", action="store_true")
     parser.add_argument("--verbosity", type=int, default=0)
     parser.add_argument("--year", type=int, default=None)
 
@@ -89,7 +90,9 @@ if __name__ == "__main__":
 
     skim = libwwz.skims.four_lepton_skim
 
-    # python wvz_skimming.py /scratch/store/mc/RunIIFall17NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1 ../skims/2017_WWZ_four_lepton_skim --overwrite --verbosity 2 --year 2017
+    # python four_lepton_skimming.py /scratch/store/mc/RunIIFall17NanoAODv7/WWZJetsTo4L2Nu_4f_TuneCP5_13TeV_amcatnloFXFX_pythia8/NANOAODSIM/PU2017_12Apr2018_Nano02Apr2020_102X_mc2017_realistic_v8-v1 ../skims/2017_WWZ_four_lepton_skim --overwrite --verbosity 2 --year 2017
+
+    # python four_lepton_eft_skimming.py /scratch/rembser/production/WWZ_dim8_20200605_double_lepton_RunIIAutumn18/nano/ ../skims/2018_WWZ_dim8_four_lepton_skim --overwrite --verbosity 2 --year 2018 --eft
 
     nano_files = list_root_files_recursively(args.input)
 
@@ -136,14 +139,22 @@ if __name__ == "__main__":
     for i_nano_file, nano_file in enumerate(nano_files):
         filename = os.path.basename(nano_file).split(".")[0]
         print("skimming", filename)
-        nano = TreeWrapper(uproot.open(nano_file)["Events"], n_max_events=None)
+        events = uproot.open(nano_file)["Events"]
+        nano = TreeWrapper(events, n_max_events=None)
 
         data_full = data_loader(nano)
+
+        if args.eft:
+            # read in reweighting and change the gen weights to the standard model
+            df_weights = libwwz.mg_reweighting.get_df_mg_reweighting(events)
+            data_full["genWeight"] = data_full["genWeight"] * df_weights["EFT_SM"].values
+            df_weights = df_weights.div(df_weights["EFT_SM"], axis=0)
+
 
         metainfo["genWeightSum"] = metainfo["genWeightSum"] + np.sum(data_full["genWeight"])
         metainfo["genWeightSum2"] = metainfo["genWeightSum2"] + np.sum(data_full["genWeight"] ** 2)
 
-        data = skim(data_full)
+        data, skim_mask = skim(data_full, return_mask=True)
 
         if len(data["genWeight"]) == 0:
             continue
@@ -152,7 +163,12 @@ if __name__ == "__main__":
 
         df_other = pd.DataFrame(data={c: data[c] for c in columns_to_save})
 
-        df = pd.concat([df_other, df_leptons], axis=1)
+        if args.eft:
+            df_weights = df_weights.loc[skim_mask].copy()
+            df_weights.index = df_other.index
+            df = pd.concat([df_other, df_leptons, df_weights], axis=1)
+        else:
+            df = pd.concat([df_other, df_leptons], axis=1)
 
         outfile = os.path.join(args.output, "parquet", str(i_nano_file) + "_" + filename + ".parquet")
 
