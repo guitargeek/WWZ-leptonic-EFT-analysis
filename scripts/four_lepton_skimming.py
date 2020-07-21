@@ -79,6 +79,7 @@ if __name__ == "__main__":
     parser.add_argument("--data", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--eft", action="store_true")
+    parser.add_argument("--mc", action="store_true")
     parser.add_argument("--verbosity", type=int, default=0)
     parser.add_argument("--year", type=int, default=None)
 
@@ -107,18 +108,22 @@ if __name__ == "__main__":
         "hasTau",
         "isData",
         "lumi",
-        "met_gen_phi",
-        "met_gen_pt",
-        "nTrueInt",
         "nvtx",
         "passesMETfiltersRun2",
         "run",
         "xsec_br",
         "nb",
-        "genWeight",
         "MET_pt",
         "MET_phi",
     ]
+
+    if args.mc:
+        columns_to_save += [
+            "met_gen_phi",
+            "met_gen_pt",
+            "nTrueInt",
+            "genWeight",
+        ]
 
     columns = list(set(skim.deps + columns_to_save)) + required_cols_for_df
 
@@ -134,7 +139,8 @@ if __name__ == "__main__":
                 print("I'm not doing the skim because " + outfile + " would be overwritten!")
                 sys.exit()
 
-    metainfo = {"genWeightSum": 0.0, "genWeightSum2": 0.0}
+    if args.mc:
+        metainfo = {"genWeightSum": 0.0, "genWeightSum2": 0.0}
 
     for i_nano_file, nano_file in enumerate(nano_files):
         filename = os.path.basename(nano_file).split(".")[0]
@@ -144,26 +150,27 @@ if __name__ == "__main__":
 
         data_full = data_loader(nano)
 
-        if args.eft:
+        if args.eft and args.mc:
             # read in reweighting and change the gen weights to the standard model
             df_weights = libwwz.mg_reweighting.get_df_mg_reweighting(events)
             data_full["genWeight"] = data_full["genWeight"] * df_weights["EFT_SM"].values
             df_weights = df_weights.div(df_weights["EFT_SM"], axis=0)
 
 
-        metainfo["genWeightSum"] = metainfo["genWeightSum"] + np.sum(data_full["genWeight"])
-        metainfo["genWeightSum2"] = metainfo["genWeightSum2"] + np.sum(data_full["genWeight"] ** 2)
+        if args.mc:
+            metainfo["genWeightSum"] = metainfo["genWeightSum"] + np.sum(data_full["genWeight"])
+            metainfo["genWeightSum2"] = metainfo["genWeightSum2"] + np.sum(data_full["genWeight"] ** 2)
 
         data, skim_mask = skim(data_full, return_mask=True)
 
-        if len(data["genWeight"]) == 0:
+        if len(data["lumi"]) == 0:
             continue
 
         df_leptons = four_veto_lepton_df(data)
 
         df_other = pd.DataFrame(data={c: data[c] for c in columns_to_save})
 
-        if args.eft:
+        if args.eft and args.mc:
             df_weights = df_weights.loc[skim_mask].copy()
             df_weights.index = df_other.index
             df = pd.concat([df_other, df_leptons, df_weights], axis=1)
@@ -174,5 +181,6 @@ if __name__ == "__main__":
 
         df.to_parquet(outfile, compression="gzip", index=False)
 
-    with open(os.path.join(args.output, "metainfo.json"), "w") as outfile:
-        outfile.write(json.dumps(metainfo, indent=4, sort_keys=True))
+    if args.mc:
+        with open(os.path.join(args.output, "metainfo.json"), "w") as outfile:
+            outfile.write(json.dumps(metainfo, indent=4, sort_keys=True))

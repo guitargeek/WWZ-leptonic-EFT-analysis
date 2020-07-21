@@ -27,8 +27,8 @@ wvz_colors = {
 background_orders = {
     # "ttz": ["othernoh", "higgs", "wz", "zz", "twz", "ttz"],
     # "zz": ["othernoh", "twz", "higgs", "wz", "ttz", "zz"],
-    "ttz": ["wz", "zz", "ttz"],
-    "zz": ["wz", "ttz", "zz"],
+    "ttz": ["wz", "zz", "twz", "ttz"],
+    "zz": ["twz", "wz", "ttz", "zz"],
 }
 
 legend_labels = {
@@ -74,8 +74,10 @@ def wvz_hist(
     xlabel=None,
     ratio_plot=False,
     ylim=None,
+    data_scale=None,
     log_scale=False,
     legend_loc="auto",
+    stack_signal_on_background=False,
 ):
     def select(df):
         if query is None or query == "":
@@ -94,27 +96,6 @@ def wvz_hist(
     else:
         axes = None
         plt.figure()
-
-    for label in signal_components:
-        # if label in sample_combinations:
-            # samples = sample_combinations[label]
-        # else:
-            # samples = [label]
-        samples = [label]
-        df = pd.concat([select(data[s]) for s in samples], ignore_index=True)
-
-        dashed = "h_" in label
-
-        plt.cms_hist(
-            df[column],
-            bins,
-            weights=df["weight"],
-            style="mc",
-            label=legend_labels[label],
-            color=wvz_colors[label],
-            fill=False,
-            dashed=dashed,
-        )
 
     baseline_events = None
     baseline_errors2 = None
@@ -141,9 +122,50 @@ def wvz_hist(
             plot_uncertainty=plot_uncertainty,
         )
 
+    if not stack_signal_on_background:
+        baseline_events_bkg = baseline_events
+        baseline_errors2_bkg = baseline_errors2
+        baseline_events = None
+        baseline_errors2 = None
+    else:
+        baseline_errors2_bkg = np.array(baseline_errors2)
+        baseline_errors2 = baseline_errors2 * 0.0
+
+    for label in signal_components:
+        # if label in sample_combinations:
+            # samples = sample_combinations[label]
+        # else:
+            # samples = [label]
+        samples = [label]
+        df = pd.concat([select(data[s]) for s in samples], ignore_index=True)
+
+        dashed = "h_" in label
+
+        baseline_events, baseline_errors2 = plt.cms_hist(
+            df[column],
+            bins,
+            weights=df["weight"],
+            style="mc",
+            label=legend_labels[label],
+            color=wvz_colors[label],
+            fill=False,
+            dashed=dashed,
+            baseline_events=baseline_events,
+            baseline_errors2=baseline_errors2,
+        )
+
+    if not stack_signal_on_background:
+        baseline_events = baseline_events_bkg
+        baseline_errors2 = baseline_errors2_bkg
+    else:
+        baseline_errors2 = baseline_errors2 + baseline_errors2_bkg
+
     if plot_data:
+        vals = select(data["data"])[column]
+        weights = data_scale * np.ones(len(vals)) if not data_scale is None else None
         data_events, data_errors2 = plt.cms_hist(
-            select(data["data"])[column], bins, style="data", fill=False, color="r", label=r"Data"
+            vals, bins, style="data", fill=False, color="r", label=r"Data",
+            weights=weights,
         )
 
     if ylim:

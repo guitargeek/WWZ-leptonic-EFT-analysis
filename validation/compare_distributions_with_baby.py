@@ -1,4 +1,5 @@
 import libwwz
+from libwwz.array_utils import *
 
 from geeksw.utils.core import concatenate
 from geeksw.utils.data_loader_tools import make_data_loader, TreeWrapper, list_root_files_recursively
@@ -6,6 +7,7 @@ from geeksw.utils.data_loader_tools import make_data_loader, TreeWrapper, list_r
 import uproot
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 year = 2018
@@ -58,6 +60,7 @@ columns = [
     "VetoNoIsoMuon_pfRelIso03_all",
     "VetoNoIsoMuon_pfRelIso03_all_wLep",
     "nb",
+    "n_veto_leptons",
     *libwwz.output.columns,
 ]
 
@@ -81,17 +84,17 @@ for column in datas[-1].keys():
 
 nano_event = data["evt"]
 
-n_overlap = np.sum(np.in1d(nano_event, baby_event))
-n_nano = len(nano_event)
-n_baby = len(baby_event)
+nano_idx, baby_idx = libwwz.validation.nano_baby_overlap(nano_event, baby_event)
 
-print()
-print("Overlapping events:", n_overlap)
-print("Events only in nano:", n_nano - n_overlap)
-print("Events only in baby:", n_baby - n_overlap)
-print()
+def check_n_veto_leptons(baby, nano):
 
-_, nano_idx, baby_idx = np.intersect1d(nano_event, baby_event, return_indices=True)
+    # tree = TreeWrapper(baby)
+    s1 = pd.Series(baby.array("lep_isVVVVeto")[baby_idx].sum())# + pass_vefrom_muon_id(tree)[baby_idx].sum())
+    print(s1.value_counts())
+    s2 = pd.Series(nano["n_veto_leptons"][nano_idx])
+    print(s2.value_counts())
+
+check_n_veto_leptons(baby, data)
 
 
 def kinematics_comparison_plot(

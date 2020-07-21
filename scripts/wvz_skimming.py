@@ -49,6 +49,10 @@ if __name__ == "__main__":
         "run",
         "xsec_br",
         "nb",
+        "n_10_leptons",
+        "n_25_leptons",
+        "n_veto_leptons_noiso",
+        "n_veto_leptons",
     ]
 
     columns = list(set(skim.deps + columns_to_save))

@@ -19,6 +19,8 @@ def passes_Z_id(df):
         selection = base_selection & ((is_ele & electron_selection) | (is_mu & muon_selection))
 
         df_out[f"VetoLepton_passesZid_{i}"] = selection
+        df_out[f"VetoLepton_passesZid_{i}"] = base_selection
+
     return df_out
 
 
@@ -41,6 +43,8 @@ def passes_W_id(df, use_z_id=False):
         selection = base_selection & ((is_ele & electron_selection) | (is_mu & muon_selection))
 
         df_out[f"VetoLepton_passesWid_{i}"] = selection
+        df_out[f"VetoLepton_passesWid_{i}"] = base_selection
+
     return df_out
 
 
@@ -144,6 +148,13 @@ def find_boson_candidate_indices(df):
     w_lep_2_idx[np.logical_and(z_lep_1_idx == 1, z_lep_2_idx == 3)] = 2
     w_lep_2_idx[np.logical_and(z_lep_1_idx == 2, z_lep_2_idx == 3)] = 1
 
+    # The invariant mass of the W-candidate leptons no matter if they make a Z-boson or not
+    m_ll = np.zeros(len(df), dtype=np.int)
+    pair_masses = jagged_pair_masses(df)
+    # print(pair_masses)
+    # print(to_singleton_jagged_array(lep_idx_to_z_idx(w_lep_1_idx, w_lep_2_idx)))
+    m_ll[in_z_window] = pair_masses[in_z_window,lep_idx_to_z_idx(w_lep_1_idx, w_lep_2_idx)[in_z_window]].flatten()
+
     # Don't consider W-leptons if they don' pass the ID
     passes_w_id = jagged_lepton_variable(df, "passesWid")[in_z_window]
     jagged_w_lep_1_idx_in_z_window = to_singleton_jagged_array(w_lep_1_idx[in_z_window])
@@ -178,7 +189,7 @@ def find_boson_candidate_indices(df):
     w_lep_2_idx[~passes_all] = -99
 
     return pd.DataFrame(
-        dict(z_lep_1_idx=z_lep_1_idx, z_lep_2_idx=z_lep_2_idx, w_lep_1_idx=w_lep_1_idx, w_lep_2_idx=w_lep_2_idx)
+        dict(z_lep_1_idx=z_lep_1_idx, z_lep_2_idx=z_lep_2_idx, w_lep_1_idx=w_lep_1_idx, w_lep_2_idx=w_lep_2_idx, m_ll=m_ll)
     )
 
 
