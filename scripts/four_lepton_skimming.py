@@ -118,12 +118,7 @@ if __name__ == "__main__":
     ]
 
     if args.mc:
-        columns_to_save += [
-            "met_gen_phi",
-            "met_gen_pt",
-            "nTrueInt",
-            "genWeight",
-        ]
+        columns_to_save += ["met_gen_phi", "met_gen_pt", "nTrueInt", "genWeight"]
 
     columns = list(set(skim.deps + columns_to_save)) + required_cols_for_df
 
@@ -155,7 +150,6 @@ if __name__ == "__main__":
             df_weights = libwwz.mg_reweighting.get_df_mg_reweighting(events)
             data_full["genWeight"] = data_full["genWeight"] * df_weights["EFT_SM"].values
             df_weights = df_weights.div(df_weights["EFT_SM"], axis=0)
-
 
         if args.mc:
             metainfo["genWeightSum"] = metainfo["genWeightSum"] + np.sum(data_full["genWeight"])

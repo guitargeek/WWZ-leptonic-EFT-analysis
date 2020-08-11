@@ -86,13 +86,15 @@ nano_event = data["evt"]
 
 nano_idx, baby_idx = libwwz.validation.nano_baby_overlap(nano_event, baby_event)
 
+
 def check_n_veto_leptons(baby, nano):
 
     # tree = TreeWrapper(baby)
-    s1 = pd.Series(baby.array("lep_isVVVVeto")[baby_idx].sum())# + pass_vefrom_muon_id(tree)[baby_idx].sum())
+    s1 = pd.Series(baby.array("lep_isVVVVeto")[baby_idx].sum())  # + pass_vefrom_muon_id(tree)[baby_idx].sum())
     print(s1.value_counts())
     s2 = pd.Series(nano["n_veto_leptons"][nano_idx])
     print(s2.value_counts())
+
 
 check_n_veto_leptons(baby, data)
 

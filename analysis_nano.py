@@ -19,6 +19,7 @@ import libwwz
 
 from libwwz.four_lepton_analysis import jagged_lepton_variable, four_lepton_analysis
 
+
 def cut_gen_filter(df, sample_name, year):
     if "wwz_amcatnlo" in sample_name and year != 2016:
         return df["nLightLep"] == 4
@@ -97,14 +98,17 @@ def is_4_lepton_event(wvz):
     m = np.sign(pdg).sum() == 0
     # m = reduce_and(wvz["lep_pass_veto"].sum() == 4, np.sign(wvz["lep_id"][wvz["lep_pass_veto"]]).sum() == 0)
     # pdg = wvz["lep_id"][wvz["lep_pass_veto"]][m]
-    return np.logical_and(m, reduce_or(
-        pdg[:, 0] + pdg[:, 1] == 0,
-        pdg[:, 0] + pdg[:, 2] == 0,
-        pdg[:, 0] + pdg[:, 3] == 0,
-        pdg[:, 1] + pdg[:, 2] == 0,
-        pdg[:, 1] + pdg[:, 3] == 0,
-        pdg[:, 2] + pdg[:, 3] == 0,
-    ))
+    return np.logical_and(
+        m,
+        reduce_or(
+            pdg[:, 0] + pdg[:, 1] == 0,
+            pdg[:, 0] + pdg[:, 2] == 0,
+            pdg[:, 0] + pdg[:, 3] == 0,
+            pdg[:, 1] + pdg[:, 2] == 0,
+            pdg[:, 1] + pdg[:, 3] == 0,
+            pdg[:, 2] + pdg[:, 3] == 0,
+        ),
+    )
 
 
 def cut_hlt(wvz):
@@ -169,6 +173,7 @@ def event_weight(wvz, sample_name, year, pileup_reweighting=False):
 
     return evt_weights
 
+
 def cut_four_leptons_low_mll(wvz):
     mask = reduce_or(wvz["lep_is_z"], wvz["lep_is_nom"])
 
@@ -193,6 +198,7 @@ def cut_four_lepton_pt(wvz):
     pt = wvz["lep_pt"]
     return reduce_and(pt[wvz["lep_is_z"]].max() > 25.0, pt[wvz["lep_is_nom"]].max() > 25.0)
 
+
 year = 2018
 # sample_name = "wwz_4l2v_amcatnlo_1"
 sample_name = "ttz_llvv_mll10_amcatnlo_1"
@@ -204,13 +210,15 @@ tag = "WVZMVA{0}_v0.1.21".format(year)
 # wvz = load_four_lepton_skim(year, "TTZnlo")
 # wvz = load_four_lepton_skim(year, "WZ")
 # wvz_analyzed = four_lepton_analysis(wvz)
-wvz = load_four_lepton_skim(year, "TTZnlo", override_path="/home/llr/cms/rembser/WWZ-leptonic-EFT-analysis/skims/wvz_2018_ttz")
+wvz = load_four_lepton_skim(
+    year, "TTZnlo", override_path="/home/llr/cms/rembser/WWZ-leptonic-EFT-analysis/skims/wvz_2018_ttz"
+)
 
 # wvz["lep_mass"] = 0.0
 
 
 # wvz["lep_p4"] = uproot_methods.TLorentzVectorArray.from_ptetaphim(
-    # wvz["lep_pt"], wvz["lep_eta"], wvz["lep_phi"], wvz["lep_mass"]
+# wvz["lep_pt"], wvz["lep_eta"], wvz["lep_phi"], wvz["lep_mass"]
 # )
 
 # wvz["lep_pass_veto"] = pass_vefrom_lepton_mva_id(wvz)
@@ -234,19 +242,19 @@ wvz = load_four_lepton_skim(year, "TTZnlo", override_path="/home/llr/cms/rembser
 # wvz["lep_mt"] = np.sqrt(2.0 * wvz["met_pt"] * wvz["lep_et"] * (1.0 - np.cos(wvz["lep_phi"] - wvz["met_phi"])))
 
 
-
 # wvz["has_two_lep_nom"] = reduce_and(
-    # wvz["lep_is_z"].sum() == 2, wvz["lep_is_nom"].sum() == 2, wvz["lep_id"][wvz["lep_is_nom"]].prod() < 0.0
+# wvz["lep_is_z"].sum() == 2, wvz["lep_is_nom"].sum() == 2, wvz["lep_id"][wvz["lep_is_nom"]].prod() < 0.0
 # )
 
 # wvz["is_SFOS"] = wvz["lep_id"][wvz["lep_is_nom"]].prod() != -143
 # wvz["is_on_z"] = np.logical_and(
-    # np.abs(wvz["lep_p4"][wvz["lep_is_nom"]].sum().mass - 91.1876) < 10.0, wvz["lep_id"][wvz["lep_is_nom"]].sum() == 0
+# np.abs(wvz["lep_p4"][wvz["lep_is_nom"]].sum().mass - 91.1876) < 10.0, wvz["lep_id"][wvz["lep_is_nom"]].sum() == 0
 # )
 
 # wvz["is_high_mt"] = np.logical_and(
-    # (wvz["lep_mt"][wvz["lep_is_nom"]] > 40).sum() >= 1, (wvz["lep_mt"][wvz["lep_is_nom"]] > 20).sum() >= 2
+# (wvz["lep_mt"][wvz["lep_is_nom"]] > 40).sum() >= 1, (wvz["lep_mt"][wvz["lep_is_nom"]] > 20).sum() >= 2
 # )
+
 
 def ele_z_cand_sf(wvz):
     m = reduce_and(wvz["lep_is_z"], np.abs(wvz["lep_id"]) == 11)
@@ -288,9 +296,9 @@ def muon_nom_sf(wvz, year=None):
 f = uproot.open("../tmp/WVZLooper/outputs/" + tag + "/test/CutResults_MC_" + sample_name + "_results.root")
 
 # Start with cutflow
-tgt = pd.DataFrame({'evt' : wvz.evt}, index=np.arange(len(wvz["evt"])))
+tgt = pd.DataFrame({"evt": wvz.evt}, index=np.arange(len(wvz["evt"])))
 tgt = add_cut(tgt, "Root", True)
-tgt = add_cut(tgt, "EventWeight", True, previous_cut="Root")#, weight=wvz["genWeight"])
+tgt = add_cut(tgt, "EventWeight", True, previous_cut="Root")  # , weight=wvz["genWeight"])
 tgt = add_cut(tgt, "GenFilter", True, previous_cut="EventWeight")
 
 # List of common four lepton related selections
@@ -370,9 +378,15 @@ print(tgt.loc[~np.in1d(tgt.evt, tgt_common.evt)][from_validate].sum())
 print(tgt.loc[np.in1d(tgt.evt, tgt_common.evt)][from_validate].sum())
 
 df_compare = pd.DataFrame()
-df_compare["agreement [%]"] = (tgt_common[from_validate] == ref_common[from_validate]).sum() * 1.0 / len(tgt_common) * 100
-df_compare["kept only by jonas [%]"] = (tgt_common[from_validate] > ref_common[from_validate]).sum() * 1.0 / len(tgt_common) * 100
-df_compare["kept only by philip [%]"] = (tgt_common[from_validate] < ref_common[from_validate]).sum() * 1.0 / len(tgt_common) * 100
+df_compare["agreement [%]"] = (
+    (tgt_common[from_validate] == ref_common[from_validate]).sum() * 1.0 / len(tgt_common) * 100
+)
+df_compare["kept only by jonas [%]"] = (
+    (tgt_common[from_validate] > ref_common[from_validate]).sum() * 1.0 / len(tgt_common) * 100
+)
+df_compare["kept only by philip [%]"] = (
+    (tgt_common[from_validate] < ref_common[from_validate]).sum() * 1.0 / len(tgt_common) * 100
+)
 df_compare["kept by jonas [events]"] = tgt[from_validate].sum()
 df_compare["kept by philip [events]"] = ref[from_validate].sum()
 
@@ -391,7 +405,7 @@ print("")
 
 # hist_writer = RootHistogramWriter("out.root")
 # for cut in from_validate:
-    # hist_writer.fill(cut + "__Njet", 6, 0, 6, wvz["met_pt"][tgt[cut]], weights=tgt[cut + "Weight"])
+# hist_writer.fill(cut + "__Njet", 6, 0, 6, wvz["met_pt"][tgt[cut]], weights=tgt[cut + "Weight"])
 # hist_writer.write()
 
 

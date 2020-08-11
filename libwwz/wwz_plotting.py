@@ -7,6 +7,7 @@ import pandas as pd
 
 
 wvz_colors = {
+    "tt": "#cccccc",
     "ttz": "#f5ec45",
     "wz": "#e69f00",
     "higgs": "#009e73",
@@ -27,8 +28,8 @@ wvz_colors = {
 background_orders = {
     # "ttz": ["othernoh", "higgs", "wz", "zz", "twz", "ttz"],
     # "zz": ["othernoh", "twz", "higgs", "wz", "ttz", "zz"],
-    "ttz": ["wz", "zz", "twz", "ttz"],
-    "zz": ["twz", "wz", "ttz", "zz"],
+    "ttz": ["tt", "wz", "zz", "twz", "ttz"],
+    "zz": ["tt", "twz", "wz", "ttz", "zz"],
 }
 
 legend_labels = {
@@ -36,6 +37,7 @@ legend_labels = {
     "wz": "WZ",
     "higgs": "Higgs",
     "zz": "ZZ",
+    "tt": r"$t\bar{t}$",
     "twz": "tWZ",
     "othernoh": "Other",
     "wwz": "WWZ",
@@ -102,9 +104,9 @@ def wvz_hist(
 
     for label in background_order:
         # if label in sample_combinations:
-            # samples = sample_combinations[label]
+        # samples = sample_combinations[label]
         # else:
-            # samples = [label]
+        # samples = [label]
         samples = [label]
         df = pd.concat([select(data[s]) for s in samples], ignore_index=True)
 
@@ -133,9 +135,9 @@ def wvz_hist(
 
     for label in signal_components:
         # if label in sample_combinations:
-            # samples = sample_combinations[label]
+        # samples = sample_combinations[label]
         # else:
-            # samples = [label]
+        # samples = [label]
         samples = [label]
         df = pd.concat([select(data[s]) for s in samples], ignore_index=True)
 
@@ -164,8 +166,7 @@ def wvz_hist(
         vals = select(data["data"])[column]
         weights = data_scale * np.ones(len(vals)) if not data_scale is None else None
         data_events, data_errors2 = plt.cms_hist(
-            vals, bins, style="data", fill=False, color="r", label=r"Data",
-            weights=weights,
+            vals, bins, style="data", fill=False, color="r", label=r"Data", weights=weights
         )
 
     if ylim:

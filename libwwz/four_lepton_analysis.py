@@ -3,6 +3,8 @@ import pandas as pd
 
 import awkward
 
+from geeksw.utils.array_utils import unpack_pair_values, awksel
+
 
 def passes_Z_id(df):
     df_out = pd.DataFrame()
@@ -19,7 +21,7 @@ def passes_Z_id(df):
         selection = base_selection & ((is_ele & electron_selection) | (is_mu & muon_selection))
 
         df_out[f"VetoLepton_passesZid_{i}"] = selection
-        df_out[f"VetoLepton_passesZid_{i}"] = base_selection
+        # df_out[f"VetoLepton_passesZid_{i}"] = base_selection
 
     return df_out
 
@@ -27,7 +29,12 @@ def passes_Z_id(df):
 def passes_W_id(df, use_z_id=False):
     if use_z_id:
         df_out = passes_Z_id(df)
-        df_out.columns = ["VetoLepton_passesWid_0", "VetoLepton_passesWid_1", "VetoLepton_passesWid_2", "VetoLepton_passesWid_3"]
+        df_out.columns = [
+            "VetoLepton_passesWid_0",
+            "VetoLepton_passesWid_1",
+            "VetoLepton_passesWid_2",
+            "VetoLepton_passesWid_3",
+        ]
         return df_out
     df_out = pd.DataFrame()
     for i in range(4):
@@ -43,24 +50,35 @@ def passes_W_id(df, use_z_id=False):
         selection = base_selection & ((is_ele & electron_selection) | (is_mu & muon_selection))
 
         df_out[f"VetoLepton_passesWid_{i}"] = selection
-        df_out[f"VetoLepton_passesWid_{i}"] = base_selection
+        # df_out[f"VetoLepton_passesWid_{i}"] = base_selection
 
     return df_out
 
 
-def jagged_pair_masses(df):
-    content = df[
-        [
-            "VetoLeptonPair_mass_01",
-            "VetoLeptonPair_mass_02",
-            "VetoLeptonPair_mass_03",
-            "VetoLeptonPair_mass_12",
-            "VetoLeptonPair_mass_13",
-            "VetoLeptonPair_mass_23",
-        ]
-    ].values.flatten()
+def get_complementary_indices(a, b, default=-99):
 
-    return awkward.JaggedArray.fromcounts(6 + np.zeros(len(df), dtype=np.int), content)
+    c = np.zeros(len(a), dtype=np.int) + default
+    d = np.zeros(len(b), dtype=np.int) + default
+
+    c[np.logical_and(a == 0, b == 1)] = 2
+    c[np.logical_and(a == 0, b == 2)] = 1
+    c[np.logical_and(a == 0, b == 3)] = 1
+    c[np.logical_and(a == 1, b == 2)] = 0
+    c[np.logical_and(a == 1, b == 3)] = 0
+    c[np.logical_and(a == 2, b == 3)] = 0
+
+    d[np.logical_and(a == 0, b == 1)] = 3
+    d[np.logical_and(a == 0, b == 2)] = 3
+    d[np.logical_and(a == 0, b == 3)] = 2
+    d[np.logical_and(a == 1, b == 2)] = 3
+    d[np.logical_and(a == 1, b == 3)] = 2
+    d[np.logical_and(a == 2, b == 3)] = 1
+
+    return c, d
+
+
+def pair_mass_array(df, prefix="VetoLeptonPair_mass_", jagged=True):
+    return unpack_pair_values(df, column_getter=lambda i, j: prefix + f"{i}{j}", diagonal=np.nan, jagged=jagged)
 
 
 def jagged_lepton_variable(df, variable):
@@ -69,10 +87,6 @@ def jagged_lepton_variable(df, variable):
     ].values.flatten()
 
     return awkward.JaggedArray.fromcounts(4 + np.zeros(len(df), dtype=np.int), content)
-
-
-def to_singleton_jagged_array(arr):
-    return awkward.JaggedArray.fromcounts(np.ones(len(arr), dtype=np.int), arr)
 
 
 def find_boson_candidate_indices(df):
@@ -100,67 +114,35 @@ def find_boson_candidate_indices(df):
 
         return df_out
 
-    z_df = find_z_candidates(df)
+    z_df = pair_mass_array(find_z_candidates(df), prefix="VetoLeptonPair_z_cand_mass_", jagged=False).reshape(
+        (len(df), -1)
+    )
 
-    def z_idx_to_lep_idx(z_idx):
-        lep_1_idx = 0 + (z_idx > 2)
-        lep_2_idx = z_idx + 1
-
-        lep_1_idx = lep_1_idx + (z_idx > 4)
-
-        lep_2_idx[z_idx == 2] = 3
-        lep_2_idx[z_idx == 3] = 2
-        lep_2_idx[z_idx == 4] = 3
-        lep_2_idx[z_idx == 5] = 3
-
-        lep_1_idx[z_idx < 0] = -99
-        lep_2_idx[z_idx < 0] = -99
-
-        return lep_1_idx, lep_2_idx
-
-    has_z_cand = ~(np.sum(~np.isnan(z_df.values), axis=1) == 0)
+    has_z_cand = ~(np.sum(~np.isnan(z_df), axis=1) == 0)
 
     in_z_window = has_z_cand[:]
-    in_z_window[has_z_cand] = np.nanmin(np.abs(z_df[has_z_cand].values - z_mass), axis=1) < 10.0
-    z_idx = np.nanargmin(np.abs(z_df[in_z_window].values - z_mass), axis=1)
-
-    w_lep_1_idx = np.zeros(len(df), dtype=np.int) - 99
-    w_lep_2_idx = np.zeros(len(df), dtype=np.int) - 99
+    in_z_window[has_z_cand] = np.nanmin(np.abs(z_df[has_z_cand] - z_mass), axis=1) < 10.0
+    z_idx = np.nanargmin(np.abs(z_df[in_z_window] - z_mass), axis=1)
 
     z_lep_1_idx = np.zeros(len(df), dtype=np.int) - 99
     z_lep_2_idx = np.zeros(len(df), dtype=np.int) - 99
 
-    a, b = z_idx_to_lep_idx(z_idx)
-    z_lep_1_idx[in_z_window] = a
-    z_lep_2_idx[in_z_window] = b
+    z_lep_1_idx[in_z_window] = z_idx // 4
+    z_lep_2_idx[in_z_window] = z_idx % 4
 
-    w_lep_1_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 1)] = 2
-    w_lep_1_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 2)] = 1
-    w_lep_1_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 3)] = 1
-    w_lep_1_idx[np.logical_and(z_lep_1_idx == 1, z_lep_2_idx == 2)] = 0
-    w_lep_1_idx[np.logical_and(z_lep_1_idx == 1, z_lep_2_idx == 3)] = 0
-    w_lep_1_idx[np.logical_and(z_lep_1_idx == 2, z_lep_2_idx == 3)] = 0
-
-    w_lep_2_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 1)] = 3
-    w_lep_2_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 2)] = 3
-    w_lep_2_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 3)] = 2
-    w_lep_2_idx[np.logical_and(z_lep_1_idx == 1, z_lep_2_idx == 2)] = 3
-    w_lep_2_idx[np.logical_and(z_lep_1_idx == 1, z_lep_2_idx == 3)] = 2
-    w_lep_2_idx[np.logical_and(z_lep_1_idx == 2, z_lep_2_idx == 3)] = 1
+    w_lep_1_idx, w_lep_2_idx = get_complementary_indices(z_lep_1_idx, z_lep_2_idx)
 
     # The invariant mass of the W-candidate leptons no matter if they make a Z-boson or not
     m_ll = np.zeros(len(df), dtype=np.int)
-    pair_masses = jagged_pair_masses(df)
-    # print(pair_masses)
-    # print(to_singleton_jagged_array(lep_idx_to_z_idx(w_lep_1_idx, w_lep_2_idx)))
-    m_ll[in_z_window] = pair_masses[in_z_window,lep_idx_to_z_idx(w_lep_1_idx, w_lep_2_idx)[in_z_window]].flatten()
+    pair_masses = pair_mass_array(df)
+    m_ll[in_z_window] = awksel(pair_masses, [w_lep_1_idx, w_lep_2_idx], mask=in_z_window)
 
     # Don't consider W-leptons if they don' pass the ID
     passes_w_id = jagged_lepton_variable(df, "passesWid")[in_z_window]
-    jagged_w_lep_1_idx_in_z_window = to_singleton_jagged_array(w_lep_1_idx[in_z_window])
-    jagged_w_lep_2_idx_in_z_window = to_singleton_jagged_array(w_lep_2_idx[in_z_window])
+    w_lep_1_idx_in_z_window = w_lep_1_idx[in_z_window].copy()
+    w_lep_2_idx_in_z_window = w_lep_2_idx[in_z_window].copy()
     passes = np.logical_and(
-        passes_w_id[jagged_w_lep_1_idx_in_z_window], passes_w_id[jagged_w_lep_2_idx_in_z_window]
+        awksel(passes_w_id, [w_lep_1_idx_in_z_window]), awksel(passes_w_id, [w_lep_2_idx_in_z_window])
     ).flatten()
     passes_all = np.array(in_z_window)
     passes_all[in_z_window] = passes
@@ -169,8 +151,8 @@ def find_boson_candidate_indices(df):
 
     # Don't consider W-leptons if they are not opposite charge
     w_lep_charge = np.sign(jagged_lepton_variable(df, "pdgId"))[in_z_window]
-    w_charge_1 = w_lep_charge[jagged_w_lep_1_idx_in_z_window].flatten()
-    w_charge_2 = w_lep_charge[jagged_w_lep_2_idx_in_z_window].flatten()
+    w_charge_1 = awksel(w_lep_charge, [w_lep_1_idx_in_z_window])
+    w_charge_2 = awksel(w_lep_charge, [w_lep_2_idx_in_z_window])
     passes = w_charge_1 + w_charge_2 == 0
     passes_all = np.array(in_z_window)
     passes_all[in_z_window] = passes
@@ -179,8 +161,8 @@ def find_boson_candidate_indices(df):
 
     # W candidate pt cuts
     w_cand_pt = jagged_lepton_variable(df, "pt")[in_z_window]
-    w_pt_1 = w_cand_pt[jagged_w_lep_1_idx_in_z_window].flatten()
-    w_pt_2 = w_cand_pt[jagged_w_lep_2_idx_in_z_window].flatten()
+    w_pt_1 = awksel(w_cand_pt, [w_lep_1_idx_in_z_window])
+    w_pt_2 = awksel(w_cand_pt, [w_lep_2_idx_in_z_window])
     passes = np.logical_and(np.max([w_pt_1, w_pt_2], axis=0) > 25, np.min([w_pt_1, w_pt_2], axis=0) > 10)
 
     passes_all = np.array(in_z_window)
@@ -189,21 +171,14 @@ def find_boson_candidate_indices(df):
     w_lep_2_idx[~passes_all] = -99
 
     return pd.DataFrame(
-        dict(z_lep_1_idx=z_lep_1_idx, z_lep_2_idx=z_lep_2_idx, w_lep_1_idx=w_lep_1_idx, w_lep_2_idx=w_lep_2_idx, m_ll=m_ll)
+        dict(
+            z_lep_1_idx=z_lep_1_idx,
+            z_lep_2_idx=z_lep_2_idx,
+            w_lep_1_idx=w_lep_1_idx,
+            w_lep_2_idx=w_lep_2_idx,
+            m_ll=m_ll,
+        )
     )
-
-
-def lep_idx_to_z_idx(z_lep_1_idx, z_lep_2_idx):
-    z_idx = np.zeros(len(z_lep_1_idx), dtype=np.int) - 99
-
-    z_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 1)] = 0
-    z_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 2)] = 1
-    z_idx[np.logical_and(z_lep_1_idx == 0, z_lep_2_idx == 3)] = 2
-    z_idx[np.logical_and(z_lep_1_idx == 1, z_lep_2_idx == 2)] = 3
-    z_idx[np.logical_and(z_lep_1_idx == 1, z_lep_2_idx == 3)] = 4
-    z_idx[np.logical_and(z_lep_1_idx == 2, z_lep_2_idx == 3)] = 5
-
-    return z_idx
 
 
 def get_z_cand_masses(df):
@@ -215,14 +190,14 @@ def get_z_cand_masses(df):
     w_lep_1_idx = df["w_lep_1_idx"][has_z_cand_2].values
     w_lep_2_idx = df["w_lep_2_idx"][has_z_cand_2].values
 
-    pair_masses = jagged_pair_masses(df)
+    pair_masses = pair_mass_array(df)
 
-    z_cand_1_mass = pair_masses[has_z_cand_1][to_singleton_jagged_array(lep_idx_to_z_idx(z_lep_1_idx, z_lep_2_idx))]
-    z_cand_2_mass = pair_masses[has_z_cand_2][to_singleton_jagged_array(lep_idx_to_z_idx(w_lep_1_idx, w_lep_2_idx))]
+    z_cand_1_mass = awksel(pair_masses[has_z_cand_1], [z_lep_1_idx, z_lep_2_idx])
+    z_cand_2_mass = awksel(pair_masses[has_z_cand_2], [w_lep_1_idx, w_lep_2_idx])
 
     lep_pdg_id = jagged_lepton_variable(df, "pdgId")[has_z_cand_2]
-    w_pdg_1 = lep_pdg_id[to_singleton_jagged_array(w_lep_1_idx)]
-    w_pdg_2 = lep_pdg_id[to_singleton_jagged_array(w_lep_2_idx)]
+    w_pdg_1 = awksel(lep_pdg_id, [w_lep_1_idx])
+    w_pdg_2 = awksel(lep_pdg_id, [w_lep_2_idx])
 
     z_cand_2_mass[w_pdg_1 + w_pdg_2 != 0] = np.nan
 
