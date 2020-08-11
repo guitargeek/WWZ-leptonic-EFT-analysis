@@ -7,7 +7,6 @@ import awkward
 import uproot_methods
 
 # from root_utils import RootHistogramWriter
-from libwwz.pileup_reweighting import get_pileup_weights
 from libwwz.array_utils import reduce_and, reduce_or
 from libwwz.array_utils import awkward_indices
 from libwwz.cut_utils import add_cut
@@ -141,39 +140,6 @@ def cut_hlt(wvz):
     return np.logical_and(presel, triggered)
 
 
-def event_weight(wvz, sample_name, year, pileup_reweighting=False):
-
-    fix_xsec = 1.0
-
-    if sample_name == "ggh_hzz4l_powheg_1":
-        fix_xsec = 1.1287633316  # Difference between scale1fb and HXSWG twiki
-    if sample_name == "ggh_hzz4l_powheg_1" and year == 2017:
-        fix_xsec = 1.1287633316 * 1.236e-05 / 5.617e-05  # Difference between scale1fb and HXSWG twiki
-    if sample_name == "zz_4l_powheg_1":
-        fix_xsec = 1.1  # Missing K-factor (scale1fb set to 1.256 which is without kfactor)
-    if sample_name == "ttz_llvv_mll10":
-        fix_xsec = 0.2728 / 0.2529  # TTZ AN2018-025 has 0.2728 while we used 0.2529
-    if sample_name == "wwz_4l2v_amcatnlo_1" and "v0.1.15" in tag and year == 2018:
-        fix_xsec = 3.528723e-7 / 3.1019e-7  #  error from wrong scale1fb
-
-    if year == 2016:
-        evt_weights = fix_xsec * wvz["evt_scale1fb"] * 35.9
-    elif year == 2017:
-        evt_weights = fix_xsec * wvz["evt_scale1fb"] * 41.3
-    elif year == 2018:
-        evt_weights = fix_xsec * wvz["evt_scale1fb"] * 59.74
-    else:
-        evt_weights = fix_xsec * wvz["evt_scale1fb"] * 137.0
-
-    if pileup_reweighting:
-        evt_weights *= get_pileup_weights(wvz["nTrueInt"], year)
-
-    # isData column is still somehow bugged so we don't touch it
-    # evt_weights[wvz["isData"]] = 1.0
-
-    return evt_weights
-
-
 def cut_four_leptons_low_mll(wvz):
     mask = reduce_or(wvz["lep_is_z"], wvz["lep_is_nom"])
 
@@ -226,7 +192,7 @@ wvz = load_four_lepton_skim(
 # wvz["lep_pass_nominal"] = pass_nominal_lepton_mva_id(wvz)
 
 
-# wvz["evt_weight"] = event_weight(wvz, sample_name, year)
+# wvz["evt_weight"] = event_weight(wvz, sample_name, year, tag)
 # wvz["lep_idx"] = awkward_indices(wvz["lep_pt"])
 
 # lep_z_id_is_z = find_z_pairs(wvz["lep_p4"][wvz["lep_pass_z_id"]], wvz["lep_id"][wvz["lep_pass_z_id"]])
