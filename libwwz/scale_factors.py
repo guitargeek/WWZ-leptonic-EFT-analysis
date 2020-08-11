@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 
-scale_factor_path = "resources/scalefactors/wvz/v1"
+scale_factor_path = os.path.join(os.environ["WWZPATH"], "resources/scalefactors/wvz/v1")
 
 
 class EGammaScaleFactors(object):

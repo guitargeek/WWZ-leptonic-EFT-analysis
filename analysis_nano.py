@@ -7,12 +7,12 @@ import awkward
 import uproot_methods
 
 # from root_utils import RootHistogramWriter
-from pileup_reweighting import get_pileup_weights
+from libwwz.pileup_reweighting import get_pileup_weights
 from libwwz.array_utils import reduce_and, reduce_or
 from libwwz.array_utils import awkward_indices
-from cut_utils import add_cut
-from physics import find_z_pairs
-import scale_factors
+from libwwz.cut_utils import add_cut
+from libwwz.physics import find_z_pairs
+import libwwz.scale_factors as scale_factors
 
 from libwwz.utils import load_four_lepton_skim
 import libwwz

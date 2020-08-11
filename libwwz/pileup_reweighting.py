@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 
+import os
 
-pileup_weights = {2017: pd.read_csv("resources/pileup_weigths/puw2017.csv")}
+
+pileup_weights = {2017: pd.read_csv(os.path.join(os.environ["WWZPATH"], "resources/pileup_weigths/puw2017.csv"))}
 
 
 def get_pileup_weights(n_true_int, year):

@@ -7,12 +7,12 @@ import awkward
 import uproot_methods
 
 # from root_utils import RootHistogramWriter
-from pileup_reweighting import get_pileup_weights
+from libwwz.pileup_reweighting import get_pileup_weights
 from libwwz.array_utils import reduce_and, reduce_or
 from libwwz.array_utils import awkward_indices
-from cut_utils import add_cut
-from physics import find_z_pairs
-import scale_factors
+from libwwz.cut_utils import add_cut
+from libwwz.physics import find_z_pairs
+import libwwz.scale_factors as scale_factors
 
 
 def cut_gen_filter(df, sample_name, year):
@@ -164,7 +164,7 @@ def event_weight(wvz, sample_name, year, pileup_reweighting=False):
     return evt_weights
 
 
-year = 2018
+year = 2017
 sample_name = "wwz_4l2v_amcatnlo_1"
 # year = 2016
 # sample_name = "wwz_amcatnlo_1"
@@ -211,6 +211,8 @@ branches = [
 ]
 
 entrystop = 1000
+# entrystop = 1000
+# entrystop = None
 
 wvz = t.arrays(branches, entrystop=entrystop)
 wvz_new = {}
@@ -252,8 +254,6 @@ wvz["lep_is_nom"] = np.logical_and(~wvz["lep_is_z"], wvz["lep_pass_nominal"])
 
 wvz["lep_et"] = wvz["lep_energy"] / np.cosh(wvz["lep_eta"])
 wvz["lep_mt"] = np.sqrt(2.0 * wvz["met_pt"] * wvz["lep_et"] * (1.0 - np.cos(wvz["lep_phi"] - wvz["met_phi"])))
-
-f = uproot.open("../tmp/WVZLooper/outputs/" + tag + "/test/CutResults_MC_" + sample_name + "_results.root")
 
 
 def cut_four_leptons_low_mll(wvz):
@@ -397,24 +397,32 @@ from_validate = [
     "ChannelOffZHighMT",
 ]
 
-ref = f["cutResultTree"].pandas.df(entrystop=entrystop)
-
-d = 0 + tgt[from_validate[-1]] - ref[from_validate[-1]]
-mask = tgt[from_validate[-1]] ^ ref[from_validate[-1]]
-print(d.value_counts())
-
 df_compare = pd.DataFrame()
-df_compare["agreement [%]"] = (tgt[from_validate] == ref[from_validate]).sum() * 1.0 / len(tgt) * 100
-df_compare["kept only by jonas [%]"] = (tgt[from_validate] > ref[from_validate]).sum() * 1.0 / len(tgt) * 100
-df_compare["kept only by philip [%]"] = (tgt[from_validate] < ref[from_validate]).sum() * 1.0 / len(tgt) * 100
 
-series = ref[map(lambda s: s + "Weight", from_validate)].sum()
-series.index = map(lambda s: s[:-6], series.index)
-df_compare["yield philip"] = series
+compare_with_ref = False
+
+if compare_with_ref:
+    ref_file = uproot.open("../tmp/WVZLooper/outputs/" + tag + "/test/CutResults_MC_" + sample_name + "_results.root")
+    ref = ref_file["cutResultTree"].pandas.df(entrystop=entrystop)
+
+    d = 0 + tgt[from_validate[-1]] - ref[from_validate[-1]]
+    mask = tgt[from_validate[-1]] ^ ref[from_validate[-1]]
+    print(d.value_counts())
+
+    df_compare["agreement [%]"] = (tgt[from_validate] == ref[from_validate]).sum() * 1.0 / len(tgt) * 100
+    df_compare["kept only by jonas [%]"] = (tgt[from_validate] > ref[from_validate]).sum() * 1.0 / len(tgt) * 100
+    df_compare["kept only by philip [%]"] = (tgt[from_validate] < ref[from_validate]).sum() * 1.0 / len(tgt) * 100
+
+    series = ref[map(lambda s: s + "Weight", from_validate)].sum()
+    series.index = map(lambda s: s[:-6], series.index)
+    df_compare["yield philip"] = series
 
 series = tgt[map(lambda s: s + "Weight", from_validate)].sum()
 series.index = map(lambda s: s[:-6], series.index)
 df_compare["yield jonas"] = series
+
+series = tgt[from_validate].sum()
+df_compare["n jonas"] = series
 
 print("")
 print("Syncronization level:")
