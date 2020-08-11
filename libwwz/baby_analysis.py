@@ -48,6 +48,8 @@ def run_baby_analysis():
 
     import libwwz
 
+    from geeksw.utils.data_loader_tools import TreeWrapper
+
     def cut_gen_filter(df, sample_name, year):
         if "wwz_amcatnlo" in sample_name and year != 2016:
             return df["nLightLep"] == 4
@@ -163,56 +165,15 @@ def run_baby_analysis():
     # tag = "WVZMVA{0}_v0.1.15".format(year)
     # tag = "WVZ{0}_v0.1.12.7".format(year)
 
-    # t = uproot.open("/home/jonas/PhD/VVV/data/babies/{0}/{1}.root".format(tag, sample_name))["t"]
-    t = uproot.open("/scratch/rembser/babies/{0}/{1}.root".format(tag, sample_name))["t"]
-    branches = [
-        "run",
-        "lumi",
-        "evt",
-        "isData",
-        "nLightLep",
-        "lep_id",
-        "lep_pt",
-        "lep_eta",
-        "lep_sip3d",
-        "lep_phi",
-        "lep_energy",
-        "lep_isCutBasedIsoVetoPOG",
-        "lep_isMediumPOG",
-        "lep_relIso04DB",
-        "lep_isCutBasedIsoMediumPOG",
-        "lep_isVVVVeto",
-        "lep_isMVAwp90IsoPOG",
-        "lep_relIso03EAwLep",
-        "lep_isMVAwpLooseNoIsoPOG",
-        "passesMETfiltersRun2",
-        "pass_duplicate_mm_em_ee",
-        "HLT_DoubleEl",
-        "HLT_MuEG",
-        "HLT_DoubleMu",
-        "met_pt",
-        "met_phi",
-        "evt_scale1fb",
-        "nTrueInt",
-        "nb",
-        "nj",
-        "firstgoodvertex",
-        "weight_btagsf",
-    ]
+    root_file_name = "/scratch/rembser/babies/{0}/{1}.root".format(tag, sample_name)
+    t = uproot.open(root_file_name)["t"]
 
-    entrystop = 1000
-    # entrystop = 1000
-    # entrystop = None
-
-    wvz = t.arrays(branches, entrystop=entrystop)
-    wvz_new = {}
-    for k, v in wvz.items():
-        wvz_new[k.decode("utf-8")] = v
-    wvz = wvz_new
+    entrystop = 10000
+    wvz = TreeWrapper(t, n_max_events=entrystop, extendable=True)
 
     wvz["lep_mass"] = 0.0
 
-    wvz["lep_p4"] = uproot_methods.TLorentzVectorArray.from_ptetaphim(
+    wvz["lep_p4_"] = uproot_methods.TLorentzVectorArray.from_ptetaphim(
         wvz["lep_pt"], wvz["lep_eta"], wvz["lep_phi"], wvz["lep_mass"]
     )
 
@@ -228,14 +189,14 @@ def run_baby_analysis():
         wvz["lep_pass_nominal"] = pass_nominal_lepton_id(wvz)
 
     wvz["evt_weight"] = libwwz.baby_analysis.event_weight(wvz, sample_name, year, tag)
-    wvz["lep_idx"] = awkward_indices(wvz["lep_pt"])
+    wvz["lep_idx_"] = awkward_indices(wvz["lep_pt"])
 
-    lep_z_id_is_z = find_z_pairs(wvz["lep_p4"][wvz["lep_pass_z_id"]], wvz["lep_id"][wvz["lep_pass_z_id"]])
+    lep_z_id_is_z = find_z_pairs(wvz["lep_p4_"][wvz["lep_pass_z_id"]], wvz["lep_id"][wvz["lep_pass_z_id"]])
 
     wvz["lep_is_z"] = wvz["lep_pt"] < 0.0
-    wvz["lep_is_z"][wvz["lep_idx"][wvz["lep_pass_z_id"]][lep_z_id_is_z]] = True
+    wvz["lep_is_z"][wvz["lep_idx_"][wvz["lep_pass_z_id"]][lep_z_id_is_z]] = True
 
-    wvz["z_mass"] = wvz["lep_p4"][wvz["lep_is_z"]].sum().mass
+    wvz["z_mass"] = wvz["lep_p4_"][wvz["lep_is_z"]].sum().mass
 
     wvz["lep_is_nom"] = np.logical_and(~wvz["lep_is_z"], wvz["lep_pass_nominal"])
 
@@ -247,7 +208,7 @@ def run_baby_analysis():
 
         res = mask.sum() == 4
 
-        p4 = wvz["lep_p4"][mask][res]
+        p4 = wvz["lep_p4_"][mask][res]
         ch = np.sign(wvz["lep_id"][mask][res])
 
         mll_cut = 12.0
@@ -271,7 +232,7 @@ def run_baby_analysis():
 
     wvz["is_SFOS"] = wvz["lep_id"][wvz["lep_is_nom"]].prod() != -143
     wvz["is_on_z"] = np.logical_and(
-        np.abs(wvz["lep_p4"][wvz["lep_is_nom"]].sum().mass - 91.1876) < 10.0,
+        np.abs(wvz["lep_p4_"][wvz["lep_is_nom"]].sum().mass - 91.1876) < 10.0,
         wvz["lep_id"][wvz["lep_is_nom"]].sum() == 0,
     )
 
